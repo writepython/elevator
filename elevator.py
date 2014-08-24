@@ -6,11 +6,50 @@ USAGE_MESSAGE = """Usage: elevator.py -i <input_file> -m <mode>
 """
 
 def mode_a(command_sets):
-    distance_travelled = 0
     for command_set in command_sets:
+        distance_travelled = 0
+        output_list = []
         initial_floor, colon, commands = command_set.partition(':')
+        current_floor = int(initial_floor)
+        output_list.append(current_floor)        
         commands = [ [ int(command.split('-')[0]), int(command.split('-')[1]) ] for command in commands.split(',') ]
-            
+        for command in commands:
+            start = command[0]
+            end = command[1]            
+            if start != current_floor:
+                output_list.append(start)
+            if end != start:
+                output_list.append(end)            
+            distance_to_start = abs(current_floor-start)
+            distance_to_end = abs(start-end)
+            distance_travelled = distance_travelled + distance_to_start + distance_to_end
+            current_floor = end
+        output_list.append("(%d)" % distance_travelled)
+        print " ".join( [str(x) for x in output_list] )
+
+def mode_b(command_sets):
+    for command_set in command_sets:
+        distance_travelled = 0
+        output_list = []
+        initial_floor, colon, commands = command_set.partition(':')
+        current_floor = int(initial_floor)
+        output_list.append(current_floor)        
+        commands = [ [ int(command.split('-')[0]), int(command.split('-')[1]) ] for command in commands.split(',') ]
+        for command in commands:
+            floors_we_pass = 
+            start = command[0]
+            end = command[1]            
+            if start != current_floor:
+                output_list.append(start)
+            if end != start:
+                output_list.append(end)            
+            distance_to_start = abs(current_floor-start)
+            distance_to_end = abs(start-end)
+            distance_travelled = distance_travelled + distance_to_start + distance_to_end
+            current_floor = end
+        output_list.append("(%d)" % distance_travelled)
+        print " ".join( [str(x) for x in output_list] )
+        
 def main(argv):
     input_file = None
     mode = None
@@ -40,6 +79,8 @@ def main(argv):
         print "Operating in mode: %s" % mode
         if mode == 'a':
             mode_a(command_sets)
+        elif mode == 'b':
+            mode_b(command_sets)            
     
 if __name__ == "__main__":
     main(sys.argv[1:])    
