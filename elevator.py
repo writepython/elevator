@@ -1,6 +1,6 @@
-import os, sys, getopt, traceback
+import sys, getopt
 
-USAGE_MESSAGE = """Usage: elevator.py -i <input_file> -m <mode>
+USAGE_MESSAGE = """Usage: python elevator.py -i <input_file> -m <mode>
 <input_file> is a text file containing multiple sets of commands as an input.
 <mode> is the mode the elevator will operate in throughout the application lifecycle. Options are "a" and "b".
 """
@@ -9,19 +9,16 @@ def mode_a(command_sets):
     for command_set in command_sets:
         distance_travelled = 0
         output_list = []
-        initial_floor, colon, commands = command_set.partition(':')
+        initial_floor, colon, commands_string = command_set.partition(':')
         current_floor = int(initial_floor)
         output_list.append(current_floor)        
-        commands = [ [ int(command.split('-')[0]), int(command.split('-')[1]) ] for command in commands.split(',') ]
-        for command in commands:
-            start = command[0]
-            end = command[1]            
+        commands = [ [ int(command.split('-')[0]), int(command.split('-')[1]) ] for command in commands_string.split(',') ]
+        for start, end in commands:
             if start != current_floor:
                 output_list.append(start)
-            if end != start:
-                output_list.append(end)            
-            distance_to_start = abs(current_floor-start)
-            distance_to_end = abs(start-end)
+            output_list.append(end)            
+            distance_to_start = abs(current_floor - start)
+            distance_to_end = abs(start - end)
             distance_travelled = distance_travelled + distance_to_start + distance_to_end
             current_floor = end
         output_list.append("(%d)" % distance_travelled)
@@ -31,20 +28,50 @@ def mode_b(command_sets):
     for command_set in command_sets:
         distance_travelled = 0
         output_list = []
-        initial_floor, colon, commands = command_set.partition(':')
+        initial_floor, colon, commands_string = command_set.partition(':')
         current_floor = int(initial_floor)
-        output_list.append(current_floor)        
-        commands = [ [ int(command.split('-')[0]), int(command.split('-')[1]) ] for command in commands.split(',') ]
-        for command in commands:
-            floors_we_pass = 
-            start = command[0]
-            end = command[1]            
+        output_list.append(current_floor)
+        # Group the commands into batches based on direction
+        batches = []
+        current_batch = []
+        last_known_direction = 'up'
+        for cmd in commands_string.split(','):
+            command_split = cmd.split('-')
+            start = int(command_split[0])
+            end = int(command_split[1])
+            if start < end:
+                direction = 'up'
+            elif end < start:
+                direction = 'down'
+            command = dict(start=start, end=end, direction=direction)
+            if direction == last_known_direction:
+                current_batch.append(command)
+            else:
+                last_known_direction = direction
+                if current_batch:
+                    batches.append(current_batch)
+                current_batch = [ command ]
+        batches.append(current_batch)
+        # Process each batch
+        for batch in batches:
+            direction = batch[0].get('direction')
+            floors_hit = []
+            for command in batch:
+                floors_hit.append(command.get('start'))
+                floors_hit.append(command.get('end'))
+            if direction == 'up': 
+                floors_hit = sorted( list(set(floors_hit)) )
+            elif direction == 'down':
+                floors_hit = sorted( list(set(floors_hit)), reverse=True )
+            start = floors_hit.pop(0)
+            end = floors_hit.pop(-1)                
             if start != current_floor:
                 output_list.append(start)
-            if end != start:
-                output_list.append(end)            
-            distance_to_start = abs(current_floor-start)
-            distance_to_end = abs(start-end)
+            for floor in floors_hit:
+                output_list.append(floor)
+            output_list.append(end)
+            distance_to_start = abs(current_floor - start)
+            distance_to_end = abs(start - end)
             distance_travelled = distance_travelled + distance_to_start + distance_to_end
             current_floor = end
         output_list.append("(%d)" % distance_travelled)
